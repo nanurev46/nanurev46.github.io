@@ -1,4 +1,9 @@
 <?php
+
+/*
+https://api.telegram.org/bot1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts/setWebhook?url=https://nanurev46.github.io/
+*/
+
 $token = '1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts';
 $path = "https://api.telegram.org/bot" . $token;
 
