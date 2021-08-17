@@ -4,24 +4,49 @@
     https://api.telegram.org/bot1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts/setWebhook?url=https://nanurev46.github.io/
     */
 
-    $token = '1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts';
-    $path = "https://api.telegram.org/bot" . $token;
+    const TOKEN = '1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts';
+    const PATH = "https://api.telegram.org/bot" . TOKEN;
 
     $data = json_decode(file_get_contents("php://input"), TRUE);
     file_put_contents('file.txt', 'data: ' . print_r($data, 1) . "\n", FILE_APPEND);
 
-    $chatId = $data["message"]["chat"]["id"];
-    $message = $data["message"]["text"];
+    $data = $data['callback_query'] ? $data['callback_query'] : $data['message'];
+    $message = mb_strtolower(($data['text'] ? $data['text'] : $data['data']), 'utf-8');
 
-    if (strpos($message, "/weather") === 0) {
-        $location = substr($message, 9);
-        $weather = json_decode(file_get_contents(
-            "http://api.openweathermap.org/data/2.5/weather?q=".$location."&appid=16e981be3deee649b594353bad8256d9"), TRUE
-        )["weather"][0]["main"];
-        file_get_contents($path."/sendmessage?chat_id=".$chatId."&text=Here's the weather in ".$location.": ". $weather);
+    switch ($message){
+        case '/hello':
+            $method = 'sendMessage';
+            $send_data = [
+                'text' => 'Hello_0'
+            ];
+            break;
+        default:
+            $method = 'sendMessage';
+            $send_data = [
+                'text' => '?'
+            ];
     }
 
-    if ($message == '/hello') {
-        file_get_contents($path."/sendmessage?chat_id=".$chatId."&text= HELLLOOOOOO_o");
+    $send_data['chat_id'] = $data['chat']['id'];
+
+    $res = sendTelegram($method, $send_data);
+
+    function sendTelegram($method, $data, $headers = []){
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_POST => 1,
+            CURLOPT_HEADER => 0,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => PATH . "/$method",
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => array_merge(array("Content-Type: application/json"), $headers),
+        ]);
+
+        $result = curl_exec($curl);
+        curl_close($curl);
+
+        return
+            (json_decode($result, 1) ? json_decode($result, 1) : $result);
     }
 ?>
