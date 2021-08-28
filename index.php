@@ -1,52 +1,65 @@
 <?php
-
-    /*
-    https://api.telegram.org/bot1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts/setWebhook?url=https://nanurev46.github.io/
-    */
-
-    const TOKEN = '1980256085:AAEG-tCXdEuDD_wZF9JFVAZ0LRZlmgE-1ts';
-    const PATH = "https://api.telegram.org/bot" . TOKEN;
-
-    $data = json_decode(file_get_contents("php://input"), TRUE);
-    file_put_contents('file.txt', 'data: ' . print_r($data, 1) . "\n", FILE_APPEND);
-
-    $data = $data['callback_query'] ? $data['callback_query'] : $data['message'];
-    $message = mb_strtolower(($data['text'] ? $data['text'] : $data['data']), 'utf-8');
-
-    switch ($message){
-        case '/hello':
-            $method = 'sendMessage';
-            $send_data = [
-                'text' => 'Hello_0'
-            ];
-            break;
-        default:
-            $method = 'sendMessage';
-            $send_data = [
-                'text' => '?'
-            ];
-    }
-
-    $send_data['chat_id'] = $data['chat']['id'];
-
-    $res = sendTelegram($method, $send_data);
-
-    function sendTelegram($method, $data, $headers = []){
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_POST => 1,
-            CURLOPT_HEADER => 0,
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => PATH . "/$method",
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => array_merge(array("Content-Type: application/json"), $headers),
-        ]);
-
-        $result = curl_exec($curl);
-        curl_close($curl);
-
-        return
-            (json_decode($result, 1) ? json_decode($result, 1) : $result);
-    }
+get_header();
 ?>
+<div class="container-fluid core_blog_container" id="main">
+	<?php
+        $sidebar_position = get_theme_mod('core_blog_sidebar_position', esc_html__( 'right', 'core-blog' ));
+        if ($sidebar_position == 'left') {
+            $sidebar_position = 'has-left-sidebar';
+        } elseif ($sidebar_position == 'right') {
+            $sidebar_position = 'has-right-sidebar';
+        } elseif ($sidebar_position == 'no') {
+            $sidebar_position = 'no-sidebar';
+        }
+        core_blog_breadcrumb_trail(); 
+	?>
+	<div class="row <?php echo esc_attr($sidebar_position); ?>">
+		<?php if(is_active_sidebar( 'sidebar-1' )) { ?>
+		<div class="col-lg-8 col-md-8 col-sm-12 blog-post">
+		<?php
+		}
+		else{
+			?>
+			<div class="col-lg-12 col-md-12 col-sm-12 blog-single-post">
+			<?php
+		}
+		if ( have_posts() ) :
+
+			if ( is_home() && ! is_front_page() ) :
+				?>
+				<header>
+					<h1 class="page-title screen-reader-text"><?php single_post_title(); ?></h1>
+				</header>
+				<?php
+			endif;
+
+			/* Start the Loop */
+			while ( have_posts() ) :
+				the_post();
+
+				/*
+				 * Include the Post-Type-specific template for the content.
+				 * If you want to override this in a child theme, then include a file
+				 * called content-___.php (where ___ is the Post Type name) and that will be used instead.
+				 */
+				get_template_part( 'template-parts/content', get_post_type() );
+
+			endwhile;
+
+		else :
+
+			get_template_part( 'template-parts/content', 'none' );
+
+		endif;
+		?>
+		<?php the_posts_navigation();?>
+		</div>
+		<?php if (($sidebar_position == 'has-left-sidebar') || ($sidebar_position == 'has-right-sidebar')) { ?>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <?php get_sidebar();?>
+        </div>
+        <?php } ?>
+	</div>
+</div>
+<?php
+get_footer();
